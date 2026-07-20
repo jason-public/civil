@@ -256,8 +256,8 @@
                     <!-- Right Horizontal Pills -->
                     <div class="flex-grow flex flex-col gap-4">
                         <!-- Goal 1 -->
-                        <div
-                            class="flex items-center gap-4 bg-gradient-to-r from-blue-50/95 to-sky-50/90 border border-blue-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300">
+                        <div onclick="openImageModal('img/01_시민주권.jpg')"
+                            class="flex items-center gap-4 bg-gradient-to-r from-blue-50/95 to-sky-50/90 border border-blue-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300 cursor-pointer">
                             <span
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-[#5497b7] text-white font-black text-lg shadow-sm">1</span>
                             <div class="flex-grow">
@@ -267,8 +267,8 @@
                         </div>
 
                         <!-- Goal 2 -->
-                        <div
-                            class="flex items-center gap-4 bg-gradient-to-r from-teal-50/95 to-emerald-50/90 border border-teal-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300">
+                        <div onclick="openImageModal('img/02_미래경제.jpg')"
+                            class="flex items-center gap-4 bg-gradient-to-r from-teal-50/95 to-emerald-50/90 border border-teal-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300 cursor-pointer">
                             <span
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-[#3da59f] text-white font-black text-lg shadow-sm">2</span>
                             <div class="flex-grow">
@@ -278,8 +278,8 @@
                         </div>
 
                         <!-- Goal 3 -->
-                        <div
-                            class="flex items-center gap-4 bg-gradient-to-r from-green-50/95 to-teal-50/90 border border-green-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300">
+                        <div onclick="openImageModal('img/03_지속가능.jpg')"
+                            class="flex items-center gap-4 bg-gradient-to-r from-green-50/95 to-teal-50/90 border border-green-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300 cursor-pointer">
                             <span
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-[#48a975] text-white font-black text-lg shadow-sm">3</span>
                             <div class="flex-grow">
@@ -289,8 +289,8 @@
                         </div>
 
                         <!-- Goal 4 -->
-                        <div
-                            class="flex items-center gap-4 bg-gradient-to-r from-lime-50/95 to-green-50/90 border border-lime-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300">
+                        <div onclick="openImageModal('img/04_행복공동체.jpg')"
+                            class="flex items-center gap-4 bg-gradient-to-r from-lime-50/95 to-green-50/90 border border-lime-100/50 rounded-2xl p-4 hover:shadow-lg hover:scale-[1.01] transition duration-300 cursor-pointer">
                             <span
                                 class="flex items-center justify-center w-10 h-10 rounded-xl bg-[#8cb73e] text-white font-black text-lg shadow-sm">4</span>
                             <div class="flex-grow">
@@ -369,6 +369,29 @@
                     class="px-5 py-2.5 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-colors shadow-sm focus:outline-none">
                     닫기
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Viewer Modal -->
+    <div id="image-modal"
+        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div id="image-modal-backdrop" onclick="closeImageModal()"
+            class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+
+        <!-- Modal Content Box -->
+        <div
+            class="relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 max-w-5xl max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300 z-10 overflow-hidden">
+            <!-- Close Button -->
+            <button onclick="closeImageModal()"
+                class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors p-2.5 rounded-full bg-black/40 hover:bg-black/60 focus:outline-none z-20">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div class="p-2 flex items-center justify-center bg-transparent">
+                <img id="modal-image-display" src="" alt="시정과제 이미지" class="max-w-full max-h-[85vh] object-contain rounded-2xl">
             </div>
         </div>
     </div>
@@ -830,6 +853,36 @@
             if (event.target.id === 'pledge-modal-backdrop') {
                 closePledgeModal();
             }
+        };
+
+        window.openImageModal = function (imgSrc) {
+            const modal = document.getElementById('image-modal');
+            const imgEl = document.getElementById('modal-image-display');
+            if (!modal || !imgEl) return;
+            
+            imgEl.src = imgSrc;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+
+            document.documentElement.classList.add('overflow-hidden');
+            document.body.classList.add('overflow-hidden');
+        };
+
+        window.closeImageModal = function () {
+            const modal = document.getElementById('image-modal');
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            modal.querySelector('.transform').classList.add('scale-95');
+
+            document.documentElement.classList.remove('overflow-hidden');
+            document.body.classList.remove('overflow-hidden');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
         };
 
         // Mobile Menu Interactivity
