@@ -504,6 +504,7 @@
         const tabsContainer = document.getElementById('tabs-container');
         const contentContainer = document.getElementById('content-container');
         let currentActiveTab = pledgeData[0].id;
+        let isSearchActive = false;
 
         function getDeptColors(deptId) {
             switch (deptId) {
@@ -565,7 +566,7 @@
             tabsContainer.innerHTML = '';
             pledgeData.forEach(dept => {
                 const btn = document.createElement('button');
-                const isSelected = (currentActiveTab === dept.id);
+                const isSelected = !isSearchActive && (currentActiveTab === dept.id);
                 btn.setAttribute('data-dept', dept.id);
                 btn.className = `tab-btn px-4 py-2 md:px-6 md:py-3 rounded-full font-bold border-2 text-sm md:text-lg shadow-sm focus:outline-none flex items-center gap-1.5 md:gap-2.5 ${isSelected ? 'active' : ''}`;
                 btn.innerHTML = `<span>${dept.icon}</span> ${dept.name}`;
@@ -575,10 +576,11 @@
                     updateContainerColor(dept.id);
                 };
                 btn.onmouseleave = () => {
-                    updateContainerColor(currentActiveTab);
+                    updateContainerColor(isSearchActive ? '' : currentActiveTab);
                 };
 
                 btn.onclick = () => {
+                    isSearchActive = false;
                     currentActiveTab = dept.id;
                     const input = document.getElementById('search-input');
                     if (input) {
@@ -992,7 +994,7 @@
             if (type === 'title') {
                 input.placeholder = "예시 '미래' 등 검색어를 입력하세요.";
             } else if (type === 'dept') {
-                input.placeholder = "예시 '교통정책' 등 검색어를 입력하세요.";
+                input.placeholder = "예시 '시민' 등 검색어를 입력하세요.";
             } else if (type === 'keyword') {
                 input.placeholder = "예시 '소상공인' 등 검색어를 입력하세요.";
             }
@@ -1024,9 +1026,14 @@
 
             const cleanQuery = query.toLowerCase().trim();
             if (cleanQuery === '') {
+                isSearchActive = false;
+                renderTabs();
                 renderContent();
                 return;
             }
+
+            isSearchActive = true;
+            renderTabs();
 
             let results = [];
             pledgeData.forEach(dept => {
@@ -1131,7 +1138,7 @@
             let html = `
                 <div class="mb-6 border-b border-gray-200 pb-4">
                     <h4 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
-                        🔍 '<span class="text-blue-600">${query}</span>' 검색 결과
+                        🔍 '<span class="text-blue-600">${query}</span>' 전체 검색 결과
                         <span class="text-sm font-semibold text-gray-400 bg-gray-100 px-3 py-1 rounded-full ml-2">총 ${results.length}건</span>
                     </h4>
                 </div>
@@ -1144,40 +1151,81 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <p class="text-gray-500 font-medium text-lg">검색 결과가 없습니다.</p>
-                        <p class="text-gray-400 text-sm mt-1">다른 키워드로 다시 검색해보세요.</p>
+                        <p class="text-gray-400 text-sm mt-1">다른 키워드로 전체 분과를 다시 검색해보세요.</p>
                     </div>
                 `;
             } else {
-                html += `<div class="space-y-4">`;
+                // Group results by department
+                const grouped = {};
+                pledgeData.forEach(dept => {
+                    grouped[dept.id] = {
+                        name: dept.name,
+                        icon: dept.icon,
+                        color: dept.color,
+                        items: []
+                    };
+                });
+
                 results.forEach(res => {
-                    const bStyle = getBadgeStyle(res.badge);
-                    let breadcrumb = '';
-                    if (res.type === 'strategy') {
-                        breadcrumb = `${res.deptIcon} ${res.deptName} &gt; ${res.largeTitle}`;
-                    } else {
-                        breadcrumb = `${res.deptIcon} ${res.deptName} &gt; ${res.largeTitle} &gt; ${res.stratTitle}`;
+                    if (grouped[res.deptId]) {
+                        grouped[res.deptId].items.push(res);
                     }
+                });
+
+                html += `<div class="space-y-8">`;
+                
+                Object.keys(grouped).forEach(deptId => {
+                    const group = grouped[deptId];
+                    if (group.items.length === 0) return;
 
                     html += `
-                        <div onclick="${res.clickHandler}" class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group gap-2 text-left">
-                            <div class="space-y-1">
-                                <div class="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
-                                    <span>${breadcrumb}</span>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2 pb-2 border-b border-gray-150">
+                                <span class="text-2xl">${group.icon}</span>
+                                <h5 class="text-lg font-bold text-gray-800">${group.name}</h5>
+                                <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full ml-1">${group.items.length}건</span>
+                            </div>
+                            <div class="space-y-3">
+                    `;
+
+                    group.items.forEach(res => {
+                        const bStyle = getBadgeStyle(res.badge);
+                        let breadcrumb = '';
+                        if (res.type === 'strategy') {
+                            breadcrumb = `${res.largeTitle}`;
+                        } else {
+                            breadcrumb = `${res.largeTitle} &gt; ${res.stratTitle}`;
+                        }
+
+                        html += `
+                            <div onclick="${res.clickHandler}" class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group gap-2.5 text-left">
+                                <div class="space-y-1">
+                                    <div class="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+                                        <span>${breadcrumb}</span>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <span class="px-2.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold text-xs border border-blue-100 shrink-0 mt-0.5">${res.code}</span>
+                                        <span class="text-gray-800 font-bold text-sm md:text-base group-hover:text-blue-600 transition-colors leading-snug">${res.title}</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-bold text-xs border border-blue-100 shrink-0">${res.code}</span>
-                                    <span class="text-gray-800 font-bold text-base md:text-lg group-hover:text-blue-600 transition-colors">${res.title}</span>
+                                <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0 border-gray-50">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold ${bStyle}">${res.badge}</span>
+                                    </div>
+                                    <svg class="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-3 self-end md:self-center shrink-0">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${bStyle}">${res.badge}</span>
-                                <svg class="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
+                        `;
+                    });
+
+                    html += `
                             </div>
                         </div>
                     `;
                 });
+
                 html += `</div>`;
             }
 
