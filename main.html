@@ -144,28 +144,32 @@
             }
         }
 
-        /* Global Click Ripple Effect */
+        /* Global Click Text Effect */
         .click-ripple {
             position: fixed;
-            border-radius: 50%;
-            border: 2px solid rgba(59, 130, 246, 0.6);
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.05) 50%, rgba(59, 130, 246, 0) 70%);
-            width: 100px;
-            height: 100px;
-            transform: translate(-50%, -50%) scale(0);
             pointer-events: none;
-            animation: ripple-animation 2.0s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
             z-index: 99999;
+            font-family: '"Noto Sans KR"', sans-serif;
+            font-weight: 900;
+            font-size: 1.25rem;
+            color: #3b82f6; /* 남양주 브랜드 블루 컬러 */
+            text-shadow: 0 2px 8px rgba(59, 130, 246, 0.4), 0 0 4px rgba(59, 130, 246, 0.2);
+            user-select: none;
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            animation: text-float-animation 1.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
         }
 
-        @keyframes ripple-animation {
+        @keyframes text-float-animation {
             0% {
-                transform: translate(-50%, -50%) scale(0);
+                transform: translate(-50%, -50%) scale(0.8) translateY(0);
+                opacity: 0;
+            }
+            15% {
                 opacity: 1;
             }
-
             100% {
-                transform: translate(-50%, -50%) scale(4);
+                transform: translate(-50%, -50%) scale(1.1) translateY(-30px);
                 opacity: 0;
             }
         }
@@ -313,7 +317,7 @@
 
 
                 <!-- Summary Description Below Boxes -->
-                <p class="text-gray-600 text-base md:text-lg mb-4">14개 핵심영역, 100대 시정과제, 총 279개 세부공약으로 구성되어 있습니다.</p>
+                <p class="text-gray-600 text-base md:text-lg mb-4">14개 핵심분야, 100대 시정과제, 총 279개 세부공약으로 구성되어 있습니다.</p>
             </div>
 
             <!-- Tab Buttons Container -->
@@ -321,8 +325,49 @@
                 <!-- Buttons will be injected here by JS -->
             </div>
 
-            <!-- Guide Text Below Tab Buttons -->
-            <p class="text-center text-gray-500 text-sm md:text-base mb-8">각 과제를 클릭하여 상세 과제를 확인해보세요.</p>
+            <!-- Guide Spacer -->
+            <div class="h-10"></div>
+
+            <!-- Keyword Search Input Group -->
+            <div class="max-w-2xl mx-auto mb-8 flex gap-3 items-center">
+                <!-- Search Input -->
+                <div class="relative flex-grow">
+                    <input type="text" id="search-input" oninput="onSearchInput(this.value)" onkeydown="if(event.key === 'Enter') executeSearch()" placeholder="예시 '미래' 등 검색어를 입력하세요."
+                        class="w-full pl-12 pr-10 py-3 bg-white border border-gray-300 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all placeholder-gray-400">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <button id="search-clear-btn" onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-450 hover:text-gray-600 hidden">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Dropdown Menu -->
+                <div class="relative shrink-0">
+                    <select id="search-type" onchange="updateSearchPlaceholder(this.value)"
+                        class="appearance-none bg-white border border-gray-300 rounded-2xl shadow-sm pl-4 pr-10 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer font-bold text-gray-700">
+                        <option value="title">과제명</option>
+                        <option value="dept">부서명</option>
+                        <option value="keyword">키워드</option>
+                    </select>
+                    <!-- Custom Arrow Icon for Dropdown -->
+                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <button onclick="executeSearch()"
+                    class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-2xl shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center gap-2">
+                    <span>검색</span>
+                </button>
+            </div>
 
             <!-- Tab Content Container -->
             <div id="content-container"
@@ -373,26 +418,25 @@
         </div>
     </div>
 
-    <!-- Image Viewer Modal -->
+    <!-- Image Viewer Modal (Full Screen) -->
     <div id="image-modal"
-        class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
-        <!-- Backdrop -->
+        class="fixed inset-0 z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center">
+        <!-- Backdrop & Close Area -->
         <div id="image-modal-backdrop" onclick="closeImageModal()"
-            class="absolute inset-0 bg-gray-900/80 backdrop-blur-md"></div>
+            class="absolute inset-0 bg-black/90 backdrop-blur-sm cursor-pointer"></div>
 
-        <!-- Modal Content Box -->
-        <div
-            class="relative bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl border border-white/20 max-w-5xl max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300 z-10 overflow-hidden">
+        <!-- Fullscreen Image Content Box -->
+        <div onclick="closeImageModal()"
+            class="relative w-screen h-screen flex items-center justify-center p-0 transform scale-95 transition-transform duration-300 z-10 cursor-pointer">
+            <img id="modal-image-display" src="" alt="시정과제 이미지" class="max-w-full max-h-full object-contain select-none">
+            
             <!-- Close Button -->
-            <button onclick="closeImageModal()"
-                class="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors p-2.5 rounded-full bg-black/40 hover:bg-black/60 focus:outline-none z-20">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onclick="closeImageModal(); event.stopPropagation();"
+                class="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors p-3 rounded-full bg-black/50 hover:bg-black/70 focus:outline-none z-20">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
-            <div class="p-2 flex items-center justify-center bg-transparent">
-                <img id="modal-image-display" src="" alt="시정과제 이미지" class="max-w-full max-h-[85vh] object-contain rounded-2xl">
-            </div>
         </div>
     </div>
 
@@ -536,6 +580,17 @@
 
                 btn.onclick = () => {
                     currentActiveTab = dept.id;
+                    const input = document.getElementById('search-input');
+                    if (input) {
+                        input.value = '';
+                        const clearBtn = document.getElementById('search-clear-btn');
+                        if (clearBtn) clearBtn.classList.add('hidden');
+                    }
+                    const searchType = document.getElementById('search-type');
+                    if (searchType) {
+                        searchType.value = 'title';
+                        updateSearchPlaceholder('title');
+                    }
                     renderTabs();
                     renderContent();
                 };
@@ -774,7 +829,12 @@
             bodyEl.innerHTML = html;
         };
 
-        window.openPledgeModal = function (largeCode, stratCode) {
+        window.openPledgeModal = function (largeCode, stratCode, deptId) {
+            if (deptId && deptId !== currentActiveTab) {
+                currentActiveTab = deptId;
+                renderTabs();
+                updateContainerColor(currentActiveTab);
+            }
             const dept = pledgeData.find(d => d.id === currentActiveTab);
             if (!dept) return;
 
@@ -913,6 +973,205 @@
             }
         }
 
+        window.updateSearchPlaceholder = function(type) {
+            const input = document.getElementById('search-input');
+            if (!input) return;
+            
+            if (type === 'title') {
+                input.placeholder = "예시 '미래' 등 검색어를 입력하세요.";
+            } else if (type === 'dept') {
+                input.placeholder = "예시 '교통정책' 등 검색어를 입력하세요.";
+            } else if (type === 'keyword') {
+                input.placeholder = "예시 '소상공인' 등 검색어를 입력하세요.";
+            }
+        };
+
+        window.onSearchInput = function(val) {
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (clearBtn) {
+                if (val.trim().length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+        };
+
+        window.executeSearch = function() {
+            const input = document.getElementById('search-input');
+            const searchType = document.getElementById('search-type').value;
+            if (!input) return;
+
+            const query = input.value;
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (query.trim().length > 0) {
+                if (clearBtn) clearBtn.classList.remove('hidden');
+            } else {
+                if (clearBtn) clearBtn.classList.add('hidden');
+            }
+
+            const cleanQuery = query.toLowerCase().trim();
+            if (cleanQuery === '') {
+                renderContent();
+                return;
+            }
+
+            let results = [];
+            pledgeData.forEach(dept => {
+                dept.large_tasks.forEach(lt => {
+                    lt.strategies.forEach(st => {
+                        let matchesStrategy = false;
+                        
+                        if (searchType === 'dept') {
+                            matchesStrategy = st.detail && st.detail.lead_dept && st.detail.lead_dept.toLowerCase().includes(cleanQuery);
+                        } else if (searchType === 'title') {
+                            matchesStrategy = st.title.toLowerCase().includes(cleanQuery) || st.code.toLowerCase().includes(cleanQuery);
+                        } else {
+                            const matchesStrategyTitle = st.title.toLowerCase().includes(cleanQuery);
+                            const matchesStrategyCode = st.code.toLowerCase().includes(cleanQuery);
+                            const matchesStrategyDept = st.detail && st.detail.lead_dept && st.detail.lead_dept.toLowerCase().includes(cleanQuery);
+                            const matchesStrategyType = st.type && st.type.toLowerCase().includes(cleanQuery);
+                            const matchesStrategyPlan = st.detail && st.detail.plan && st.detail.plan.toLowerCase().includes(cleanQuery);
+                            const matchesStrategyReview = st.detail && st.detail.review && st.detail.review.toLowerCase().includes(cleanQuery);
+                            
+                            matchesStrategy = matchesStrategyTitle || matchesStrategyCode || matchesStrategyDept || matchesStrategyType || matchesStrategyPlan || matchesStrategyReview;
+                        }
+
+                        if (matchesStrategy) {
+                            results.push({
+                                type: 'strategy',
+                                deptId: dept.id,
+                                deptName: dept.name,
+                                deptIcon: dept.icon,
+                                largeTitle: lt.title,
+                                largeCode: lt.code,
+                                code: st.code,
+                                title: st.title,
+                                badge: st.type || (st.items && st.items.length > 0 ? `세부공약 ${st.items.length}건` : '공약'),
+                                clickHandler: `openPledgeModal('${lt.code}', '${st.code}', '${dept.id}')`
+                            });
+                        }
+
+                        if (st.items && st.items.length > 0) {
+                            st.items.forEach(item => {
+                                let matchesItem = false;
+                                
+                                if (searchType === 'dept') {
+                                    matchesItem = item.detail && item.detail.lead_dept && item.detail.lead_dept.toLowerCase().includes(cleanQuery);
+                                } else if (searchType === 'title') {
+                                    matchesItem = item.title.toLowerCase().includes(cleanQuery) || item.code.toLowerCase().includes(cleanQuery);
+                                } else {
+                                    const matchesItemTitle = item.title.toLowerCase().includes(cleanQuery);
+                                    const matchesItemCode = item.code.toLowerCase().includes(cleanQuery);
+                                    const matchesItemDept = item.detail && item.detail.lead_dept && item.detail.lead_dept.toLowerCase().includes(cleanQuery);
+                                    const matchesItemType = item.type && item.type.toLowerCase().includes(cleanQuery);
+                                    const matchesItemPlan = item.detail && item.detail.plan && item.detail.plan.toLowerCase().includes(cleanQuery);
+                                    const matchesItemReview = item.detail && item.detail.review && item.detail.review.toLowerCase().includes(cleanQuery);
+                                    
+                                    matchesItem = matchesItemTitle || matchesItemCode || matchesItemDept || matchesItemType || matchesItemPlan || matchesItemReview;
+                                }
+
+                                if (matchesItem) {
+                                    results.push({
+                                        type: 'item',
+                                        deptId: dept.id,
+                                        deptName: dept.name,
+                                        deptIcon: dept.icon,
+                                        largeTitle: lt.title,
+                                        largeCode: lt.code,
+                                        stratTitle: st.title,
+                                        stratCode: st.code,
+                                        code: item.code,
+                                        title: item.title,
+                                        badge: item.type || '공약',
+                                        clickHandler: `openSubPledgeModal('${lt.code}', '${st.code}', '${item.code}', '${dept.id}')`
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+            renderSearchResults(results, query);
+        };
+
+        window.openSubPledgeModal = function(largeCode, stratCode, itemCode, deptId) {
+            openPledgeModal(largeCode, stratCode, deptId);
+            showSubPledgeDetail(largeCode, stratCode, itemCode, deptId);
+        };
+
+        window.clearSearch = function() {
+            const input = document.getElementById('search-input');
+            if (input) {
+                input.value = '';
+                executeSearch();
+            }
+        };
+
+        function renderSearchResults(results, query) {
+            const container = document.getElementById('content-container');
+            if (!container) return;
+
+            container.style.backgroundColor = '';
+            container.style.borderColor = '';
+
+            let html = `
+                <div class="mb-6 border-b border-gray-200 pb-4">
+                    <h4 class="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
+                        🔍 '<span class="text-blue-600">${query}</span>' 검색 결과
+                        <span class="text-sm font-semibold text-gray-400 bg-gray-100 px-3 py-1 rounded-full ml-2">총 ${results.length}건</span>
+                    </h4>
+                </div>
+            `;
+
+            if (results.length === 0) {
+                html += `
+                    <div class="py-16 text-center">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-500 font-medium text-lg">검색 결과가 없습니다.</p>
+                        <p class="text-gray-400 text-sm mt-1">다른 키워드로 다시 검색해보세요.</p>
+                    </div>
+                `;
+            } else {
+                html += `<div class="space-y-4">`;
+                results.forEach(res => {
+                    const bStyle = getBadgeStyle(res.badge);
+                    let breadcrumb = '';
+                    if (res.type === 'strategy') {
+                        breadcrumb = `${res.deptIcon} ${res.deptName} &gt; ${res.largeTitle}`;
+                    } else {
+                        breadcrumb = `${res.deptIcon} ${res.deptName} &gt; ${res.largeTitle} &gt; ${res.stratTitle}`;
+                    }
+
+                    html += `
+                        <div onclick="${res.clickHandler}" class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group gap-2 text-left">
+                            <div class="space-y-1">
+                                <div class="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+                                    <span>${breadcrumb}</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-bold text-xs border border-blue-100 shrink-0">${res.code}</span>
+                                    <span class="text-gray-800 font-bold text-base md:text-lg group-hover:text-blue-600 transition-colors">${res.title}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 self-end md:self-center shrink-0">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${bStyle}">${res.badge}</span>
+                                <svg class="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             calculateStatsAndInit();
@@ -920,7 +1179,31 @@
             renderContent();
             initAnimations();
             initMobileMenu();
+            initScrollToTop();
         });
+
+        // Scroll to Top Button Interactivity
+        function initScrollToTop() {
+            window.addEventListener('scroll', () => {
+                const btn = document.getElementById('scroll-to-top');
+                if (btn) {
+                    if (window.scrollY > 300) {
+                        btn.classList.remove('opacity-0', 'pointer-events-none');
+                        btn.classList.add('opacity-100', 'pointer-events-auto');
+                    } else {
+                        btn.classList.remove('opacity-100', 'pointer-events-auto');
+                        btn.classList.add('opacity-0', 'pointer-events-none');
+                    }
+                }
+            });
+
+            window.scrollToTop = function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            };
+        }
 
         function initAnimations() {
             const revealElements = document.querySelectorAll('.reveal-on-scroll');
@@ -967,6 +1250,7 @@
                 setTimeout(() => {
                     const ripple = document.createElement('div');
                     ripple.className = 'click-ripple';
+                    ripple.innerText = 'NYJ';
                     ripple.style.left = `${x}px`;
                     ripple.style.top = `${y}px`;
                     document.body.appendChild(ripple);
@@ -978,7 +1262,6 @@
 
             window.addEventListener('click', (e) => {
                 createRippleRing(e.clientX, e.clientY, 0);
-                createRippleRing(e.clientX, e.clientY, 350);
             });
         }
 
@@ -1137,6 +1420,13 @@
             animateCanvas();
         }
     </script>
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top" onclick="scrollToTop()"
+        class="fixed bottom-8 right-8 z-40 bg-white/90 backdrop-blur-sm text-gray-700 border border-gray-200/80 p-3.5 rounded-full shadow-lg opacity-0 pointer-events-none hover:bg-white hover:text-blue-600 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none flex items-center justify-center">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
 </body>
 
 </html>
