@@ -304,8 +304,13 @@
     </section>
 
     <!-- Detailed Pledges Section -->
-    <section id="pledges" class="py-20 bg-white">
-        <div class="container mx-auto px-4 max-w-6xl reveal-on-scroll">
+    <section id="pledges"
+        class="relative py-20 bg-cover bg-center bg-no-repeat overflow-hidden z-10"
+        style="background-image: url('img/subject.png');">
+        <!-- Bright, soft blur overlay for readability and glassmorphic feel -->
+        <div class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-0"></div>
+
+        <div class="container mx-auto px-4 max-w-6xl reveal-on-scroll relative z-10">
             <div class="text-center mb-12">
                 <h3 class="text-5xl md:text-6xl font-bold text-gray-900 mb-8">100대 시정과제</h3>
                 
